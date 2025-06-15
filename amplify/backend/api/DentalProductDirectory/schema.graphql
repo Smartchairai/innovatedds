@@ -1,0 +1,8 @@
+type Link @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  title: String!
+  url: String!
+  description: String
+  category: String
+  approved: Boolean
+}

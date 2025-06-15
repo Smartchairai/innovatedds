@@ -1,0 +1,23 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-dentalproductdirecto-staging-6e65e-authRole",
+      "UnauthRoleArn": "arn:aws:iam::901352017249:role/amplify-dentalproductdirecto-staging-6e65e-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::901352017249:role/amplify-dentalproductdirecto-staging-6e65e-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-dentalproductdirecto-staging-6e65e-deployment",
+      "UnauthRoleName": "amplify-dentalproductdirecto-staging-6e65e-unauthRole",
+      "StackName": "amplify-dentalproductdirecto-staging-6e65e",
+      "StackId": "arn:aws:cloudformation:us-east-1:901352017249:stack/amplify-dentalproductdirecto-staging-6e65e/2bf44990-432b-11f0-99af-1257c60a24e5",
+      "AmplifyAppId": "d1ndvne3um49rf"
+    },
+    "categories": {
+      "auth": {
+        "DentalProductDirectory": {}
+      },
+      "api": {
+        "DentalProductDirectory": {}
+      }
+    }
+  }
+}
