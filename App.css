@@ -1,5 +1,6 @@
 .App {
   font-family: sans-serif;
+  text-align: center;
   padding: 2rem;
   background-color: #f9f9f9;
 }
@@ -17,5 +18,20 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: 300px;
-  text-align: left; /* 👈 this ensures left alignment inside the card */
+  text-align: left;
+}
+
+.product-card h2 {
+  margin: 0 0 0.5rem;
+}
+
+.product-card a {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.product-card a:hover {
+  text-decoration: underline;
 }
