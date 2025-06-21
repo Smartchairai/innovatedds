@@ -125,7 +125,9 @@ export const getCategories = async () => {
   }
 };
 
-export default {
+const airtableService = {
   fetchProducts,
   getCategories
 };
+
+export default airtableService;
