@@ -1,17 +1,33 @@
 // src/config/cognito.js
 export const cognitoConfig = {
   Auth: {
-    region: 'us-east-1',
-    userPoolId: 'us-east-1_OWGJIHWbR',
-    userPoolWebClientId: '2t9elmqo217fecocfk1pp15pdr',
-    mandatorySignIn: false,
-    authenticationFlowType: 'USER_SRP_AUTH',
-    oauth: {
-      domain: '', // We'll add this later if you want hosted UI
-      scope: ['email', 'openid', 'profile'],
-      redirectSignIn: window.location.origin,
-      redirectSignOut: window.location.origin,
-      responseType: 'code'
-    }
-  }
+    Cognito: {
+      userPoolId: 'us-east-1_OWGJIHWbR',
+      userPoolClientId: '2t9elmqo217fecocfk1pp15pdr',
+      loginWith: {
+        email: true,
+        username: false,
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: {
+          required: true,
+        },
+        given_name: {
+          required: true,
+        },
+        family_name: {
+          required: true,
+        },
+      },
+      allowGuestAccess: true,
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: false,
+      },
+    },
+  },
 };

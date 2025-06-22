@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@aws-amplify/auth": "^6.13.1",
+    "@heroicons/react": "^2.2.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -11,8 +12,10 @@
     "aws-amplify": "^6.15.1",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
+    "lucide-react": "^0.522.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
