@@ -337,7 +337,7 @@ body .modal button:contains("Continue with Google") svg {
 
 .product-badge { position: absolute; top: 1rem; left: 1rem; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); color: #1d1d1f; font-size: 0.75rem; font-weight: 600; padding: 0.375rem 0.875rem; border-radius: 1rem; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
 .product-content { padding: 1.75rem; }
-.product-title { font-size: 1.25rem; font-weight: 700; color: #1d1d1f; margin-bottom: 0.5rem; line-height: 1.3; letter-spacing: -0.02em; }
+.product-title { font-size: 1.25rem; font-weight: 700; color: #1d1d1f; margin-bottom: 0.5rem; line-height: 1.3; letter-spacing: -0.02em; white-space: normal !important; word-break: break-word !important; }
 .product-manufacturer { font-size: 0.9rem; font-weight: 600; color: #007aff; margin-bottom: 0.75rem; }
 .product-description { color: #6e6e73; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .view-details-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: linear-gradient(135deg, #007aff 0%, #5856d6 100%); color: white; padding: 0.875rem 1.5rem; border-radius: 1.25rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); font-size: 0.95rem; box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3); }
@@ -502,6 +502,39 @@ textarea:focus {
   font-weight: 400 !important;
 }
 
+/* Ensure no overlap with form fields */
+.modal-content form > *:last-child {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Fix absolute positioned elements in forms */
+.modal-content form .absolute {
+  position: absolute !important;
+}
+
+/* Ensure button doesn't overlap with inputs */
+.modal-content form button.absolute {
+  top: auto !important;
+  bottom: auto !important;
+  right: 1rem !important;
+}
+
+/* Text beside Create Account button */
+.modal-content form > div:has(button:contains("Create Account")) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  margin-top: 1rem !important;
+}
+
+/* Already have account text */
+.modal-content form p {
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+  color: #6e6e73 !important;
+}
+
 /* Sign In button - Keep rectangular with gradient */
 .modal-content button[type="submit"],
 .modal-content .btn-primary,
@@ -525,6 +558,24 @@ button:has-text("Sign In with Email") {
   box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3) !important;
   text-decoration: none !important;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Fix for the main action button (Sign In/Create Account) */
+.modal-content .btn.btn-primary {
+  position: relative !important;
+  width: 100% !important;
+  margin-top: 1rem !important;
+  display: block !important;
+}
+
+/* Ensure no absolute positioning on form buttons */
+.modal-content button.absolute:not([aria-label="Close"]) {
+  position: relative !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
 }
 
 /* Additional visual distinction for Google button */
@@ -657,6 +708,36 @@ button:has-text("Sign In with Email") {
   flex-direction: column !important;
   gap: 1rem !important;
   width: 100% !important;
+  position: relative !important;
+}
+
+/* Fix for Create Account button positioning */
+.modal-content button:contains("Create Account"),
+.modal-content button[type="submit"]:contains("Create Account") {
+  position: relative !important;
+  margin-top: 1.5rem !important;
+  width: 100% !important;
+  z-index: 1 !important;
+}
+
+/* Ensure proper spacing for form fields in registration */
+.modal-content form > div {
+  display: flex !important;
+  gap: 1rem !important;
+  width: 100% !important;
+}
+
+/* First Name and Last Name container */
+.modal-content form > div:has(input[placeholder*="First Name"]) {
+  display: flex !important;
+  gap: 1rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* Individual name fields */
+.modal-content form > div > input[type="text"] {
+  flex: 1 !important;
+  width: 100% !important;
 }
 
 /* Sign in with Email text/button styling */
@@ -669,6 +750,46 @@ button:has-text("Sign In with Email") {
   visibility: visible !important;
   position: relative !important;
   z-index: 10 !important;
+}
+
+/* Create Account button specific styling */
+.modal-content button:contains("Create Account") {
+  width: 100% !important;
+  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%) !important;
+  color: white !important;
+  padding: 0.875rem 1.5rem !important;
+  min-height: 3rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.5rem !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3) !important;
+  position: relative !important;
+  z-index: 10 !important;
+  display: block !important;
+}
+
+/* Fix for signup form button that might be positioned absolutely */
+.modal-content button[className*="absolute"] {
+  position: relative !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+/* Ensure proper spacing for the signup form */
+.modal-content .space-y-4 {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+}
+
+/* Ensure the button container doesn't overlap */
+.modal-content .space-y-4 > button {
+  margin-top: 0.5rem !important;
+  position: relative !important;
 }
 
 /* Mobile adjustments for Google button - even larger */
@@ -693,6 +814,29 @@ button:has-text("Sign In with Email") {
 }
 
 /* Modal adjustments for mobile */
+@media (max-width: 640px) {
+  .modal {
+    padding: 1rem !important;
+  }
+  
+  .modal-content {
+    padding: 1.5rem !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Even larger inputs on mobile */
+  .modal-content input[type="text"],
+  .modal-content input[type="email"],
+  .modal-content input[type="password"] {
+    height: 3.5rem !important; /* Reduced from 4.25rem */
+    font-size: 1.125rem !important; /* 18px */
+    padding: 1rem 1.25rem !important;
+    border-radius: 1rem !important;
+  }
+  
+  /* Modal adjustments for mobile */
 @media (max-width: 640px) {
   .modal {
     padding: 1rem !important;
@@ -746,6 +890,19 @@ button:has-text("Sign In with Email") {
   .modal-content .space-y-4 > * + * {
     margin-top: 1.25rem !important;
   }
+}
+
+/* CRITICAL FIX: Remove absolute positioning from the Create Account button */
+.modal-content .w-full.btn.btn-primary {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+  margin-top: 1rem !important;
+  display: block !important;
+  width: 100% !important;
 }
 
 /* Prevent iOS zoom on focus */
@@ -986,7 +1143,9 @@ input:valid:not(:placeholder-shown):not(:focus) {
 }
 
 /* Responsive */
-@media (min-width: 640px) { .sm\\:block { display: block; } }
+@media (min-width: 640px) { 
+  .sm\\:block { display: block; } 
+}
 
 @media (max-width: 768px) {
   .search-controls {
@@ -1040,4 +1199,7 @@ input:valid:not(:placeholder-shown):not(:focus) {
 .btn:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* Add missing closing brace for media query */
 }

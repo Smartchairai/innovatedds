@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, User, LogOut, Globe, Mail, Phone, MapPin, Star, Filter, ChevronRight, Eye, EyeOff, Lock, Building2 } from 'lucide-react';
+import { Search, User, LogOut, Globe, Mail, Phone, MapPin, Star, Filter, ChevronRight, Eye, EyeOff, Lock } from 'lucide-react';
 import { fetchProducts, getCategories } from './services/airtableService';
 
 // AWS Amplify v6 imports
@@ -50,6 +50,135 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+
+// Helper function to format product names with proper spacing
+const formatProductName = (name) => {
+  if (!name) return '';
+  
+  // Debug log
+  console.log('formatProductName input:', name);
+  
+  // If the name already has spaces, return it as-is
+  if (name.includes(' ')) {
+    console.log('Name already has spaces, returning as-is');
+    return name;
+  }
+  
+  // First, check if this might be a product name stored incorrectly
+  // Common patterns where the actual name has a space but it's stored without one
+  const knownProducts = {
+    'DentalFloss': 'Dental Floss',
+    'Trykiroku': 'Try Kiroku',  // Add this specific case
+    'TryKiroku': 'Try Kiroku',  // Alternative capitalization
+    // Add more known products here as needed
+  };
+  
+  if (knownProducts[name]) {
+    console.log('Found in known products:', knownProducts[name]);
+    return knownProducts[name];
+  }
+  
+  // First, handle common dental product patterns
+  let formatted = name;
+  
+  // Add spaces before capital letters (for camelCase/PascalCase)
+  // but not at the beginning of the string
+  formatted = formatted.replace(/([a-z])([A-Z])/g, '$1 $2');
+  
+  // Handle cases where there are multiple capitals in a row (e.g., "DDSPro" -> "DDS Pro")
+  formatted = formatted.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+  
+  // Handle numbers (e.g., "Bird2000" -> "Bird 2000")
+  formatted = formatted.replace(/([a-zA-Z])(\d)/g, '$1 $2');
+  formatted = formatted.replace(/(\d)([a-zA-Z])/g, '$1 $2');
+  
+  // Handle specific patterns like "Try" at the beginning
+  formatted = formatted.replace(/^(Try)([A-Z])/g, '$1 $2');
+  
+  // Handle specific dental terms that might be concatenated
+  const dentalTerms = [
+    { pattern: /Dental/g, replacement: 'Dental ' },
+    { pattern: /Floss/g, replacement: ' Floss' },
+    { pattern: /Brush/g, replacement: ' Brush' },
+    { pattern: /Paste/g, replacement: ' Paste' },
+    { pattern: /Rinse/g, replacement: ' Rinse' },
+    { pattern: /Guard/g, replacement: ' Guard' },
+    { pattern: /Whitening/g, replacement: ' Whitening' },
+    { pattern: /Orthodontic/g, replacement: ' Orthodontic' },
+    { pattern: /Implant/g, replacement: ' Implant' },
+    { pattern: /Crown/g, replacement: ' Crown' },
+    { pattern: /Bridge/g, replacement: ' Bridge' },
+    { pattern: /Veneer/g, replacement: ' Veneer' },
+    { pattern: /Root/g, replacement: ' Root' },
+    { pattern: /Canal/g, replacement: ' Canal' },
+    { pattern: /Cavity/g, replacement: ' Cavity' },
+    { pattern: /Filling/g, replacement: ' Filling' },
+    { pattern: /Extraction/g, replacement: ' Extraction' },
+    { pattern: /Periodontal/g, replacement: ' Periodontal' },
+    { pattern: /Gingivitis/g, replacement: ' Gingivitis' },
+    { pattern: /Plaque/g, replacement: ' Plaque' },
+    { pattern: /Tartar/g, replacement: ' Tartar' },
+    { pattern: /Enamel/g, replacement: ' Enamel' },
+    { pattern: /Fluoride/g, replacement: ' Fluoride' },
+    { pattern: /Mouthwash/g, replacement: ' Mouthwash' },
+    { pattern: /Toothpick/g, replacement: ' Toothpick' },
+    { pattern: /Denture/g, replacement: ' Denture' },
+    { pattern: /Retainer/g, replacement: ' Retainer' },
+    { pattern: /Braces/g, replacement: ' Braces' },
+    { pattern: /Aligner/g, replacement: ' Aligner' },
+    { pattern: /Sealant/g, replacement: ' Sealant' },
+    { pattern: /X-Ray/gi, replacement: ' X-Ray' },
+    { pattern: /XRay/gi, replacement: ' X-Ray' },
+    { pattern: /Ultrasonic/g, replacement: ' Ultrasonic' },
+    { pattern: /Scaler/g, replacement: ' Scaler' },
+    { pattern: /Polisher/g, replacement: ' Polisher' },
+    { pattern: /Sterilizer/g, replacement: ' Sterilizer' },
+    { pattern: /Composite/g, replacement: ' Composite' },
+    { pattern: /Amalgam/g, replacement: ' Amalgam' },
+    { pattern: /Anesthetic/g, replacement: ' Anesthetic' },
+    { pattern: /Sedation/g, replacement: ' Sedation' },
+    { pattern: /Prophylaxis/g, replacement: ' Prophylaxis' },
+    { pattern: /Restoration/g, replacement: ' Restoration' },
+    { pattern: /Try/g, replacement: 'Try ' },  // Add this for "Try" pattern
+    { pattern: /Kiroku/g, replacement: ' Kiroku' }  // Add this specific term
+  ];
+  
+  // Apply dental term replacements only if they're part of concatenated words
+  dentalTerms.forEach(({ pattern, replacement }) => {
+    // Only add space if the term is preceded by a letter (not already a space)
+    formatted = formatted.replace(new RegExp('([a-zA-Z])' + pattern.source, 'g'), '$1' + replacement);
+  });
+  
+  // Clean up any double spaces that might have been created
+  formatted = formatted.replace(/\s+/g, ' ').trim();
+  
+  // Handle edge cases where we might have added unwanted spaces
+  formatted = formatted.replace(/\s+([.,!?;:])/g, '$1'); // Remove spaces before punctuation
+  formatted = formatted.replace(/^\s+|\s+$/g, ''); // Trim start and end
+  
+  // Special handling for common product names that should stay together
+  const keepTogether = [
+    { find: /Oral\s+B/gi, replace: 'Oral-B' },
+    { find: /3\s+M/gi, replace: '3M' },
+    { find: /Co\s+Jet/gi, replace: 'CoJet' },
+    { find: /Pro\s+Phy/gi, replace: 'ProPhy' }
+  ];
+  
+  keepTogether.forEach(({ find, replace }) => {
+    formatted = formatted.replace(find, replace);
+  });
+  
+  console.log('formatProductName output:', formatted);
+  return formatted;
+};
+
+// Test the function with examples (remove these console.logs in production)
+console.log('formatProductName tests:');
+console.log(formatProductName('DentalFloss')); // "Dental Floss"
+console.log(formatProductName('DDSPro2000')); // "DDS Pro 2000"
+console.log(formatProductName('UltrasonicScaler')); // "Ultrasonic Scaler"
+console.log(formatProductName('3MDentalComposite')); // "3M Dental Composite"
+console.log(formatProductName('OralBToothbrush')); // "Oral-B Toothbrush"
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -135,6 +264,16 @@ const App = () => {
           getCategories()
         ]);
         
+        // Debug: Check what's coming from Airtable
+        console.log('=== PRODUCT NAME DEBUG ===');
+        productsData.forEach((product, index) => {
+          console.log(`Product ${index + 1}:`);
+          console.log('  Raw name from Airtable:', product.name);
+          console.log('  Formatted name:', formatProductName(product.name));
+          console.log('  Are they different?', product.name !== formatProductName(product.name));
+        });
+        console.log('=========================');
+        
         setProducts(productsData);
         setCategories(categoriesData);
         
@@ -150,7 +289,8 @@ const App = () => {
   }, []);
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const formattedName = formatProductName(product.name);
+    const matchesSearch = formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -509,72 +649,83 @@ const App = () => {
             </div>
 
             <div className="products-grid">
-              {filteredProducts.map(product => (
-                <div key={product.id} className={`product-card ${!isAuthenticated ? 'limited-card' : ''}`}>
-                  <div className="product-image-container">
-                    {/* Use logo if available, otherwise fallback to image */}
-                    {product.logo ? (
-                      <img 
-                        src={product.logo} 
-                        alt={`${product.name} logo`} 
-                        className="product-image object-contain p-4 bg-white"
-                        onError={(e) => {
-                          // Fallback to placeholder if logo fails to load
-                          e.target.onerror = null;
-                          e.target.src = product.image || 'https://via.placeholder.com/400x300?text=No+Logo';
-                          e.target.classList.remove('object-contain', 'p-4');
-                          e.target.classList.add('object-cover');
+              {filteredProducts.map(product => {
+                // Debug log for each product
+                console.log(`Rendering product: "${product.name}" -> "${formatProductName(product.name)}"`);
+                
+                return (
+                  <div key={product.id} className={`product-card ${!isAuthenticated ? 'limited-card' : ''}`}>
+                    <div className="product-image-container">
+                      {/* Use logo if available, otherwise fallback to image */}
+                      {product.logo ? (
+                        <img 
+                          src={product.logo} 
+                          alt={`${formatProductName(product.name)} logo`} 
+                          className="product-image object-contain p-4 bg-white"
+                          onError={(e) => {
+                            // Fallback to placeholder if logo fails to load
+                            e.target.onerror = null;
+                            e.target.src = product.image || 'https://via.placeholder.com/400x300?text=No+Logo';
+                            e.target.classList.remove('object-contain', 'p-4');
+                            e.target.classList.add('object-cover');
+                          }}
+                        />
+                      ) : (
+                        <img 
+                          src={product.image || 'https://via.placeholder.com/400x300?text=No+Image'} 
+                          alt={formatProductName(product.name)} 
+                          className="product-image object-cover" 
+                        />
+                      )}
+                      
+                      <div className="product-badge">{product.category}</div>
+                      {!isAuthenticated && (
+                        <div className="access-overlay">
+                          <Lock className="w-6 h-6 text-white mb-2" />
+                          <span className="text-white text-sm font-medium">Account Required</span>
+                        </div>
+                      )}
+                      {isAuthenticated && product.rating && (
+                        <div className="rating-badge">
+                          <Star className="w-3 h-3 text-yellow-500" style={{fill: 'currentColor'}} />
+                          <span>{product.rating}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="product-content">
+                      {/* CRITICAL FIX: Use dangerouslySetInnerHTML to ensure spaces render */}
+                      <h3 
+                        className="product-title" 
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatProductName(product.name).replace(/ /g, '&nbsp;') 
                         }}
                       />
-                    ) : (
-                      <img 
-                        src={product.image || 'https://via.placeholder.com/400x300?text=No+Image'} 
-                        alt={product.name} 
-                        className="product-image object-cover" 
-                      />
-                    )}
-                    
-                    <div className="product-badge">{product.category}</div>
-                    {!isAuthenticated && (
-                      <div className="access-overlay">
-                        <Lock className="w-6 h-6 text-white mb-2" />
-                        <span className="text-white text-sm font-medium">Account Required</span>
-                      </div>
-                    )}
-                    {isAuthenticated && product.rating && (
-                      <div className="rating-badge">
-                        <Star className="w-3 h-3 text-yellow-500" style={{fill: 'currentColor'}} />
-                        <span>{product.rating}</span>
-                      </div>
-                    )}
+                      <p className="product-manufacturer">{product.manufacturer}</p>
+                      
+                      {isAuthenticated ? (
+                        <>
+                          <p className="product-description">{product.basicDescription}</p>
+                          <button onClick={() => openProductDetails(product)} className="view-details-btn">
+                            <span>View Full Details</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="product-description text-gray-400">
+                            Complete product information available to verified users...
+                          </p>
+                          <button onClick={() => setShowAuthModal(true)} className="view-details-btn bg-orange-500 hover:bg-orange-600">
+                            <Lock className="w-4 h-4" />
+                            <span>Sign In for Details</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="product-content">
-                    <h3 className="product-title">{product.name}</h3>
-                    <p className="product-manufacturer">{product.manufacturer}</p>
-                    
-                    {isAuthenticated ? (
-                      <>
-                        <p className="product-description">{product.basicDescription}</p>
-                        <button onClick={() => openProductDetails(product)} className="view-details-btn">
-                          <span>View Full Details</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="product-description text-gray-400">
-                          Complete product information available to verified users...
-                        </p>
-                        <button onClick={() => setShowAuthModal(true)} className="view-details-btn bg-orange-500 hover:bg-orange-600">
-                          <Lock className="w-4 h-4" />
-                          <span>Sign In for Details</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {filteredProducts.length === 0 && (
@@ -622,12 +773,12 @@ const App = () => {
                   </div>
                 )}
 
-               {/* Google Sign In Button */}
-<button 
-  onClick={handleGoogleSignIn}
-  disabled={authLoading}
-  className="google-signin-btn"
->
+                {/* Google Sign In Button */}
+                <button 
+                  onClick={handleGoogleSignIn}
+                  disabled={authLoading}
+                  className="google-signin-btn"
+                >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -803,7 +954,7 @@ const App = () => {
                 <div className="w-full h-64 bg-white flex items-center justify-center p-8 rounded-t-2xl">
                   <img
                     src={selectedProduct.logo}
-                    alt={`${selectedProduct.name} logo`}
+                    alt={`${formatProductName(selectedProduct.name)} logo`}
                     className="max-h-full max-w-full object-contain"
                     onError={(e) => {
                       // Fallback to regular image if logo fails
@@ -817,7 +968,7 @@ const App = () => {
               ) : (
                 <img
                   src={selectedProduct.image || 'https://via.placeholder.com/400x300?text=No+Image'}
-                  alt={selectedProduct.name}
+                  alt={formatProductName(selectedProduct.name)}
                   className="w-full h-64 object-cover rounded-t-2xl"
                 />
               )}
@@ -829,7 +980,13 @@ const App = () => {
                   <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-2">
                     {selectedProduct.category}
                   </span>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedProduct.name}</h2>
+                  {/* Also use dangerouslySetInnerHTML here for consistency */}
+                  <h2 
+                    className="text-2xl font-bold text-gray-900 mb-1"
+                    dangerouslySetInnerHTML={{ 
+                      __html: formatProductName(selectedProduct.name).replace(/ /g, '&nbsp;') 
+                    }}
+                  />
                   <p className="text-gray-600">{selectedProduct.manufacturer}</p>
                 </div>
                 {selectedProduct.rating && (

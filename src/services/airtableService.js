@@ -1,4 +1,4 @@
-// airtableService.js - Fixed version that filters out unknown companies
+// airtableService.js - Fixed version using Product Name field from Airtable
 export const fetchProducts = async () => {
   try {
     const response = await fetch(
@@ -20,53 +20,59 @@ export const fetchProducts = async () => {
     // Log first record to check field names
     if (data.records.length > 0) {
       console.log('Available fields:', Object.keys(data.records[0].fields));
+      console.log('Sample record:', data.records[0].fields);
     }
-    
-    // Extract domain name from website URL for company name
-    const extractCompanyName = (url) => {
-      if (!url) return null; // Return null instead of 'Unknown Company'
-      try {
-        const hostname = new URL(url).hostname;
-        // Remove www. and .com/.io etc
-        const name = hostname
-          .replace(/^www\./, '')
-          .replace(/\.(com|io|co|net|org|ai|app|dev).*$/, '')
-          .split(/[.-]/)
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        
-        return name || null;
-      } catch {
-        return null;
-      }
-    };
     
     // Filter and map records
     return data.records
       .filter(record => {
-        // Only include records that have a website AND a valid company name can be extracted
-        const website = record.fields.Website;
-        const companyName = extractCompanyName(website);
-        return website && companyName;
+        // Include records that have a product name
+        // Check for different possible field names (Airtable field names are case-sensitive)
+        const productName = record.fields['Product Name'] || 
+                           record.fields['ProductName'] || 
+                           record.fields['Product name'] ||
+                           record.fields['product name'] ||
+                           record.fields.Name ||
+                           record.fields.name;
+        return productName; // Only include if we have a name
       })
       .map(record => {
-        const website = record.fields.Website || '';
-        const companyName = extractCompanyName(website);
+        // Get the product name from Airtable (check various possible field names)
+        const productName = record.fields['Product Name'] || 
+                           record.fields['ProductName'] || 
+                           record.fields['Product name'] ||
+                           record.fields['product name'] ||
+                           record.fields.Name ||
+                           record.fields.name ||
+                           'Unknown Product';
+        
+        // Get manufacturer - might be same as product name or a separate field
+        const manufacturer = record.fields.Manufacturer || 
+                           record.fields.Company ||
+                           record.fields['Company Name'] ||
+                           productName; // Fallback to product name if no manufacturer field
         
         return {
           id: record.id,
-          name: companyName,
-          manufacturer: companyName,
+          name: productName, // Use the actual product name from Airtable
+          manufacturer: manufacturer,
           category: record.fields.Category || 'Dental Technology',
-          basicDescription: `Professional dental solutions from ${companyName}`,
-          detailedDescription: `${companyName} provides innovative dental technology and services to enhance patient care and practice efficiency.`,
-          website: website,
+          basicDescription: record.fields.Description || 
+                           record.fields['Basic Description'] || 
+                           `Professional dental solutions from ${manufacturer}`,
+          detailedDescription: record.fields['Detailed Description'] || 
+                              record.fields['Full Description'] ||
+                              record.fields.Description || 
+                              `${productName} by ${manufacturer} provides innovative dental technology and services to enhance patient care and practice efficiency.`,
+          website: record.fields.Website || '',
           email: record.fields.Email || '',
           phone: record.fields.Phone || '',
           address: record.fields.Address || '',
           rating: record.fields.Rating || null,
           logo: record.fields.Logo?.[0]?.url || null,
-          image: 'https://via.placeholder.com/400x320?text=' + encodeURIComponent(companyName)
+          image: record.fields.Image?.[0]?.url || 
+                 record.fields.Photo?.[0]?.url ||
+                 'https://via.placeholder.com/400x320?text=' + encodeURIComponent(productName)
         };
       });
   } catch (error) {
@@ -93,18 +99,8 @@ export const getCategories = async () => {
 
     const data = await response.json();
     
-    // Extract unique categories or use defaults
+    // Extract unique categories
     const categories = new Set(['all']);
-    const defaultCategories = [
-      'Practice Management',
-      'Clinical Software', 
-      'Imaging & Diagnostics',
-      'Patient Communication',
-      'Billing & Insurance',
-      'Marketing & Analytics',
-      'Supplies & Equipment',
-      'Laboratory Services'
-    ];
     
     data.records.forEach(record => {
       if (record.fields.Category) {
@@ -112,8 +108,18 @@ export const getCategories = async () => {
       }
     });
     
-    // If no categories found, use defaults
+    // If we only have 'all', add some default categories
     if (categories.size === 1) {
+      const defaultCategories = [
+        'Practice Management',
+        'Clinical Software', 
+        'Imaging & Diagnostics',
+        'Patient Communication',
+        'Billing & Insurance',
+        'Marketing & Analytics',
+        'Supplies & Equipment',
+        'Laboratory Services'
+      ];
       defaultCategories.forEach(cat => categories.add(cat));
     }
     
