@@ -71,53 +71,83 @@ body {
 .mb-2 { margin-bottom: 0.5rem; }
 .mb-8 { margin-bottom: 3rem; }
 
-/* Google Sign In Button - Larger but not overlapping */
-.google-signin-btn {
+/* Google Sign In Button - Distinctive pill shape with shadow */
+.google-signin-btn,
+.modal button:first-of-type:has(svg),
+.modal-content button:first-of-type:has(svg),
+[role="dialog"] button:first-of-type:has(svg) {
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.75rem !important;
-  padding: 0.875rem 1.25rem !important; /* Reduced padding */
-  font-size: 1rem !important; /* 16px font */
-  font-weight: 500 !important;
-  border: 2px solid #e5e7eb !important;
-  border-radius: 1rem !important;
-  background-color: #ffffff !important;
-  color: #374151 !important;
-  transition: all 0.2s ease !important;
+  gap: 0.875rem !important;
+  padding: 1rem 2rem !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  border: none !important; /* Remove border */
+  border-radius: 9999px !important; /* Full pill shape */
+  background: #ffffff !important;
+  color: #3c4043 !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   cursor: pointer !important;
-  margin-bottom: 0.75rem !important;
-  min-height: 3.25rem !important; /* 52px height */
+  margin-bottom: 1.25rem !important;
+  min-height: 3.5rem !important;
   text-transform: none !important;
   letter-spacing: normal !important;
   line-height: 1.4 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  /* Prominent shadow */
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
+              0 4px 8px 3px rgba(60, 64, 67, 0.15) !important;
+  position: relative !important;
+  overflow: visible !important;
 }
 
-/* Target Google button more specifically in modal */
-.modal-content button[class*="google"],
-.modal button:has(svg):not([aria-label="Close"]):not(.absolute),
-div[class*="modal"] button[class*="google"] {
-  width: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0.75rem !important;
-  padding: 0.875rem 1.25rem !important;
-  font-size: 1rem !important;
-  font-weight: 500 !important;
-  border: 2px solid #e5e7eb !important;
-  border-radius: 1rem !important;
-  background-color: #ffffff !important;
-  color: #374151 !important;
-  min-height: 3.25rem !important;
-  margin-bottom: 0.75rem !important;
+/* Add a colorful border using pseudo-element */
+.google-signin-btn::before,
+.modal button:first-of-type:has(svg)::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  bottom: -2px !important;
+  left: -2px !important;
+  background: linear-gradient(45deg, #4285f4, #ea4335, #fbbc04, #34a853) !important;
+  border-radius: 9999px !important;
+  z-index: -1 !important;
+  opacity: 0.15 !important;
+}
+
+/* Google button hover state */
+.google-signin-btn:hover,
+.modal button:first-of-type:has(svg):hover {
+  background-color: #f8f9fa !important;
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
+              0 4px 8px 3px rgba(60, 64, 67, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Alternative: Try targeting the button container */
+.modal > div > button:first-child,
+.modal-content > button:first-child,
+form > button:first-child {
+  border-radius: 9999px !important;
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
+              0 4px 8px 3px rgba(60, 64, 67, 0.15) !important;
+}
+
+/* Make Google logo more prominent */
+.google-signin-btn svg,
+.modal button:first-of-type:has(svg) svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  flex-shrink: 0 !important;
+  filter: none !important; /* Ensure colors show */
 }
 
 .google-signin-btn:hover,
 .modal-content button[class*="google"]:hover,
-.modal button:has(svg):not([aria-label="Close"]):not(.absolute):hover {
+.modal button:has(svg):not([aria-label="Close"]):not(.absolute):hover,
+.modal button:contains("Google"):hover {
   background-color: #f9fafb !important;
   border-color: #d1d5db !important;
   transform: translateY(-1px) !important;
@@ -126,7 +156,8 @@ div[class*="modal"] button[class*="google"] {
 
 .google-signin-btn:active,
 .modal-content button[class*="google"]:active,
-.modal button:has(svg):not([aria-label="Close"]):not(.absolute):active {
+.modal button:has(svg):not([aria-label="Close"]):not(.absolute):active,
+.modal button:contains("Google"):active {
   transform: translateY(0) !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
@@ -138,14 +169,16 @@ div[class*="modal"] button[class*="google"] {
   transform: none !important;
 }
 
-/* Google logo in button */
+/* Google logo in button - larger */
 .google-signin-btn svg,
 .modal-content button[class*="google"] svg,
-.modal button:has(svg):not([aria-label="Close"]):not(.absolute) svg {
-  width: 1.25rem !important; /* 20px */
-  height: 1.25rem !important;
+.modal button:has(svg):not([aria-label="Close"]):not(.absolute) svg,
+.modal button:contains("Google") svg,
+body .modal button:contains("Continue with Google") svg {
+  width: 1.75rem !important; /* 28px */
+  height: 1.75rem !important;
   flex-shrink: 0 !important;
-  margin-right: 0 !important; /* Reset any default margins */
+  margin-right: 0 !important;
 }
 
 /* Profile image fixes */
@@ -469,10 +502,11 @@ textarea:focus {
   font-weight: 400 !important;
 }
 
-/* Sign In button in modal - ensure visibility */
+/* Sign In button - Keep rectangular with gradient */
 .modal-content button[type="submit"],
 .modal-content .btn-primary,
-.modal-content button:last-of-type:not(.google-signin-btn) {
+.modal-content form > button:last-child,
+button:has-text("Sign In with Email") {
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
@@ -481,47 +515,180 @@ textarea:focus {
   min-height: 3rem !important;
   font-size: 1rem !important;
   font-weight: 600 !important;
-  margin-top: 0.5rem !important;
+  margin-top: 1rem !important;
   margin-bottom: 0.5rem !important;
   background: linear-gradient(135deg, #007aff 0%, #5856d6 100%) !important;
   color: white !important;
   border: none !important;
-  border-radius: 1.25rem !important;
+  border-radius: 1rem !important; /* Keep rectangular */
   cursor: pointer !important;
   box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3) !important;
+  text-decoration: none !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
-/* Password field with eye icon adjustment */
+/* Additional visual distinction for Google button */
+.modal button:nth-child(1):not([type="submit"]),
+.modal form > button:first-child,
+.modal div > button:first-child {
+  background-color: #ffffff !important;
+  color: #3c4043 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.25px !important;
+  border-radius: 9999px !important; /* Pill shape */
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #dadce0 !important;
+  margin-bottom: 1.5rem !important; /* More space below */
+}
+
+/* Divider styling improvement */
+.modal-content p:has-text("Or continue with email"),
+.modal p:has-text("Or continue with email"),
+.modal-content > p {
+  margin: 1.5rem 0 !important;
+  color: #5f6368 !important;
+  font-size: 0.875rem !important;
+  position: relative !important;
+  text-align: center !important;
+}
+
+/* Add visual separator lines */
+.modal-content > p::before,
+.modal-content > p::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important;
+  width: 35% !important;
+  height: 1px !important;
+  background-color: #e0e0e0 !important;
+}
+
+.modal-content > p::before {
+  left: 0 !important;
+}
+
+.modal-content > p::after {
+  right: 0 !important;
+}
+
+/* Password field container fix */
+.modal-content .relative {
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* Password input with proper padding for eye icon */
 .modal-content .relative input[type="password"] {
-  padding-right: 4rem !important; /* More space for eye icon */
+  width: 100% !important;
+  padding: 0.875rem 3.5rem 0.875rem 1.25rem !important; /* Right padding for eye icon */
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 1rem !important;
+  background-color: #ffffff !important;
+  transition: all 0.2s ease !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  height: 3rem !important; /* Same height as other inputs */
+  min-height: 3rem !important;
 }
 
-/* Adjust eye icon button position */
-.modal-content .relative button {
-  width: 3rem !important;
-  height: 3rem !important;
-  right: 0.5rem !important;
+/* Eye icon button - properly sized and positioned */
+.modal-content .relative button[type="button"],
+.modal-content input[type="password"] + button,
+.modal-content .relative button:not([type="submit"]) {
+  position: absolute !important;
+  right: 0.75rem !important; /* Position inside the input */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 2rem !important; /* Smaller, appropriate size */
+  height: 2rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: transparent !important;
-  border: none !important;
+  cursor: pointer !important;
+  color: #6e6e73 !important;
+  transition: all 0.2s ease !important;
+  min-height: auto !important;
+  box-shadow: none !important;
 }
 
-/* Mobile adjustments for Google button */
+/* Eye icon SVG sizing */
+.modal-content .relative button svg {
+  width: 1.25rem !important; /* 20px */
+  height: 1.25rem !important;
+  color: currentColor !important;
+}
+
+/* Hover state for eye button */
+.modal-content .relative button[type="button"]:hover,
+.modal-content input[type="password"] + button:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #1d1d1f !important;
+}
+
+/* Active state for eye button */
+.modal-content .relative button[type="button"]:active {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Focus visible for accessibility */
+.modal-content .relative button[type="button"]:focus-visible {
+  outline: 2px solid #007aff !important;
+  outline-offset: 0 !important;
+}
+
+/* Ensure password field focus state works properly */
+.modal-content .relative input[type="password"]:focus {
+  outline: none !important;
+  border-color: #007aff !important;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure form has proper spacing */
+.modal-content form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  width: 100% !important;
+}
+
+/* Sign in with Email text/button styling */
+.modal-content button:contains("Sign In with Email"),
+.modal-content button:contains("Sign in with Email") {
+  width: 100% !important;
+  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%) !important;
+  color: white !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Mobile adjustments for Google button - even larger */
 @media (max-width: 640px) {
   .google-signin-btn,
   .modal-content button[class*="google"],
-  .modal button:has(svg):not([aria-label="Close"]):not(.absolute) {
-    padding: 1rem 1.5rem !important;
-    font-size: 1.125rem !important; /* 18px on mobile */
-    min-height: 3.5rem !important; /* 56px on mobile */
+  .modal button:has(svg):not([aria-label="Close"]):not(.absolute),
+  .modal button:contains("Google"),
+  body .modal button:contains("Continue with Google") {
+    padding: 1.75rem 2.25rem !important;
+    font-size: 1.375rem !important; /* 22px on mobile */
+    min-height: 5rem !important; /* 80px on mobile */
+    height: 5rem !important;
   }
   
   .google-signin-btn svg,
-  .modal-content button[class*="google"] svg {
-    width: 1.5rem !important; /* 24px on mobile */
-    height: 1.5rem !important;
+  .modal-content button[class*="google"] svg,
+  .modal button:contains("Google") svg {
+    width: 2rem !important; /* 32px on mobile */
+    height: 2rem !important;
   }
 }
 
@@ -546,6 +713,24 @@ textarea:focus {
     font-size: 1.125rem !important; /* 18px */
     padding: 1rem 1.25rem !important;
     border-radius: 1rem !important;
+  }
+  
+  /* Mobile adjustments for password field */
+  .modal-content .relative input[type="password"] {
+    height: 3.5rem !important;
+    font-size: 1.125rem !important;
+    padding: 1rem 4rem 1rem 1.25rem !important; /* More padding on mobile */
+  }
+  
+  .modal-content .relative button[type="button"] {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    right: 0.5rem !important;
+  }
+  
+  .modal-content .relative button svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
   }
   
   /* Larger buttons on mobile */
