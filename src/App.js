@@ -6,12 +6,16 @@ import { fetchProducts, getCategories } from './services/airtableService';
 import { Amplify } from 'aws-amplify';
 import { signUp, confirmSignUp, signIn, signOut, getCurrentUser, resendSignUpCode } from 'aws-amplify/auth';
 
+// Firebase imports
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+
 // Configure Amplify with NEW app client (no secret)
 Amplify.configure({
   Auth: {
     Cognito: {
       userPoolId: 'us-east-1_OWGJIHWbR',
-      userPoolClientId: 't6344gqqauaaa9vc2jv1bi537', // Replace this with your new client ID
+      userPoolClientId: 't6344gqqauaaa9vc2jv1bi537',
       loginWith: {
         email: true,
         username: false,
@@ -32,9 +36,25 @@ Amplify.configure({
   },
 });
 
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [authProvider, setAuthProvider] = useState(null); // 'cognito' or 'google'
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,13 +81,15 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if user is already authenticated on app load
+  // Check authentication status on app load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        // Check Cognito authentication
         const currentUser = await getCurrentUser();
-        console.log('Current user found:', currentUser);
+        console.log('Cognito user found:', currentUser);
         setIsAuthenticated(true);
+        setAuthProvider('cognito');
         setUser({
           username: currentUser.username,
           email: currentUser.signInDetails?.loginId || currentUser.username,
@@ -75,8 +97,26 @@ const App = () => {
           lastName: ''
         });
       } catch (error) {
-        console.log('No authenticated user found');
-        setIsAuthenticated(false);
+        console.log('No Cognito user found');
+        
+        // Check Firebase authentication
+        onAuthStateChanged(auth, (firebaseUser) => {
+          if (firebaseUser) {
+            console.log('Firebase user found:', firebaseUser);
+            setIsAuthenticated(true);
+            setAuthProvider('google');
+            setUser({
+              username: firebaseUser.displayName || firebaseUser.email,
+              email: firebaseUser.email,
+              firstName: firebaseUser.displayName?.split(' ')[0] || 'User',
+              lastName: firebaseUser.displayName?.split(' ')[1] || '',
+              photoURL: firebaseUser.photoURL
+            });
+          } else {
+            setIsAuthenticated(false);
+            setAuthProvider(null);
+          }
+        });
       }
     };
 
@@ -116,6 +156,40 @@ const App = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Google Sign In
+  const handleGoogleSignIn = async () => {
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      console.log('Google sign in successful:', user);
+      setIsAuthenticated(true);
+      setAuthProvider('google');
+      setUser({
+        username: user.displayName || user.email,
+        email: user.email,
+        firstName: user.displayName?.split(' ')[0] || 'User',
+        lastName: user.displayName?.split(' ')[1] || '',
+        photoURL: user.photoURL
+      });
+      setShowAuthModal(false);
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        setAuthError('Sign in cancelled');
+      } else if (error.code === 'auth/popup-blocked') {
+        setAuthError('Pop-up blocked. Please allow pop-ups for this site.');
+      } else {
+        setAuthError('Google sign in failed. Please try again.');
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   // Clean AWS Cognito Authentication (No SECRET_HASH)
   const handleAuth = async () => {
     setAuthLoading(true);
@@ -141,6 +215,7 @@ const App = () => {
             lastName: formData.lastName || ''
           });
           setIsAuthenticated(true);
+          setAuthProvider('cognito');
           setShowAuthModal(false);
           setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
         } else {
@@ -231,12 +306,18 @@ const App = () => {
     }
   };
 
-  // Real Sign Out
+  // Universal Sign Out
   const handleLogout = async () => {
     try {
-      await signOut();
+      if (authProvider === 'cognito') {
+        await signOut();
+      } else if (authProvider === 'google') {
+        await firebaseSignOut(auth);
+      }
+      
       setIsAuthenticated(false);
       setUser(null);
+      setAuthProvider(null);
       setSelectedProduct(null);
       console.log('User signed out successfully');
     } catch (error) {
@@ -278,13 +359,17 @@ const App = () => {
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3 bg-green-50 rounded-2xl px-4 py-2 border border-green-200">
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        ✓
-                      </span>
-                    </div>
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt={user.firstName} className="w-8 h-8 rounded-full" />
+                    ) : (
+                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          ✓
+                        </span>
+                      </div>
+                    )}
                     <span className="text-sm font-medium text-green-700 hidden sm:block">
-                      Verified User
+                      {user?.firstName || 'Verified User'}
                     </span>
                   </div>
                   <button onClick={handleLogout} className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-2xl">
@@ -537,6 +622,30 @@ const App = () => {
                   </div>
                 )}
 
+                {/* Google Sign In Button */}
+                <button 
+                  onClick={handleGoogleSignIn}
+                  disabled={authLoading}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  {authLoading ? 'Signing in...' : 'Continue with Google'}
+                </button>
+
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   {authMode === 'signup' && (
                     <div className="flex gap-4">
@@ -608,7 +717,7 @@ const App = () => {
                         {authMode === 'signin' ? 'Authenticating...' : 'Creating Account...'}
                       </div>
                     ) : (
-                      authMode === 'signin' ? 'Sign In Securely' : 'Create Account'
+                      authMode === 'signin' ? 'Sign In with Email' : 'Create Account'
                     )}
                   </button>
                 </div>
